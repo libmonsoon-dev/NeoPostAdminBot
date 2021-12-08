@@ -19,7 +19,7 @@ type MeGetter interface {
 }
 
 type ChatMemberGetter interface {
-	GetChatMember(chatID int64, userID int32) (*tdlib.ChatMember, error)
+	GetChatMember(chatID, userID int64) (*tdlib.ChatMember, error)
 }
 
 type TgClient interface {
