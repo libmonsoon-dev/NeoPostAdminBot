@@ -33,7 +33,7 @@ func NewClient(conf Config) (*Client, error) {
 		IgnoreFileNames:     true,
 	}
 
-	tdlib.SetLogVerbosityLevel(2)
+	tdlib.SetLogVerbosityLevel(1)
 	client := tdlib.NewClient(config)
 	for {
 		currentState, err := client.Authorize()
