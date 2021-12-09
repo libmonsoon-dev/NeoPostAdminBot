@@ -11,9 +11,7 @@ RUN CXXFLAGS="-stdlib=libc++" CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake -DCMA
     cd .. &&\
     php SplitSource.php &&\
     cd build && \
-    cmake --build . --target install &&\
-    cd .. &&\
-    php SplitSource.php --undo
+    cmake --build . --target install -- -j$(nproc)
 
 WORKDIR /NeoPostAdminBot
 
