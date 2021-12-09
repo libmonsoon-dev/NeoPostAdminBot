@@ -39,7 +39,7 @@ func main() {
 	tgBot := bot.NewBot(loggerFactory, tgClient)
 
 	repostConfig := repost.Config{
-		Sources:     []string{"tmp_src"},
+		Sources:     []string{"tmp_src", "karga4", "armeyskov"},
 		Destination: "tmp_dst",
 	}
 	repostHandler := repost.NewHandler(repostConfig, loggerFactory, tgClient, cache.NewPublicChatSearcher(tgClient))
