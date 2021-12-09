@@ -18,19 +18,17 @@ func NewPublicChatSearcher(upstream PublicChatSearcher) PublicChatSearcher {
 type publicChatSearcher struct {
 	upstream PublicChatSearcher
 
-	mu    sync.RWMutex
+	mu    sync.Mutex
 	cache map[string]*tdlib.Chat
 }
 
 func (p *publicChatSearcher) SearchPublicChat(username string) (*tdlib.Chat, error) {
-	p.mu.RLock()
-	if chat, ok := p.cache[username]; ok {
-		p.mu.RUnlock()
-		return chat, nil
-	}
-	p.mu.RUnlock()
 	p.mu.Lock()
 	defer p.mu.Unlock()
+
+	if chat, ok := p.cache[username]; ok {
+		return chat, nil
+	}
 
 	chat, err := p.upstream.SearchPublicChat(username)
 	if err != nil {
