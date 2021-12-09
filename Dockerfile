@@ -1,4 +1,4 @@
-FROM golang:1.17.4-stretch AS builder
+FROM golang:1.17.5-stretch AS builder
 
 RUN apt update && apt upgrade -y && apt install -y make git zlib1g-dev libssl-dev gperf php-cli cmake clang libc++-dev libc++abi-dev
 
