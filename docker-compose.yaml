@@ -1,0 +1,10 @@
+version: "3.3"
+
+services:
+  bot:
+    build: "./"
+    volumes:
+      - /var/NeoPostAdminBot:/var/NeoPostAdminBot
+    environment:
+      - DATA_PATH=/var/NeoPostAdminBot
+      - TG_BOT_TOKEN=${TG_BOT_TOKEN}
