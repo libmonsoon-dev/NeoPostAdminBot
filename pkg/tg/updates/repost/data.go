@@ -60,7 +60,6 @@ func (h *handler) getForwardData(input tdlib.UpdateMsg) (data forwardData, err e
 			continue
 		}
 
-		fmt.Printf("%T\n", message.ForwardInfo)
 		if message.ForwardInfo != nil && getFromChatId(message.ForwardInfo.Origin) == config.DestinationId {
 			h.log.Debugf("forwarded from destination channel")
 			continue
