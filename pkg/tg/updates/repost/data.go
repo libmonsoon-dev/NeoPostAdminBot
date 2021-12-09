@@ -43,6 +43,10 @@ func (h *handler) getForwardData(input tdlib.UpdateMsg) (data forwardData, err e
 	if err != nil {
 		return data, fmt.Errorf("find configs by source id %d: %w", message.ChatID, err)
 	}
+	if len(configs) == 0 {
+		h.log.Debugf("configs with sourceId = %d not found", message.ChatID)
+		return
+	}
 
 	messageDate := time.Unix(int64(message.Date), 0)
 	ok, err := h.isMessageAfterJoin(message.ChatID, messageDate)
