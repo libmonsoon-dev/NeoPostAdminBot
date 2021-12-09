@@ -60,7 +60,8 @@ func (h *handler) getForwardData(input tdlib.UpdateMsg) (data forwardData, err e
 			continue
 		}
 
-		if message.ForwardInfo != nil && message.ForwardInfo.FromChatID == config.DestinationId {
+		fmt.Printf("%T\n", message.ForwardInfo)
+		if message.ForwardInfo != nil && getFromChatId(message.ForwardInfo.Origin) == config.DestinationId {
 			h.log.Debugf("forwarded from destination channel")
 			continue
 		}
@@ -70,6 +71,17 @@ func (h *handler) getForwardData(input tdlib.UpdateMsg) (data forwardData, err e
 
 	data.shouldForward = len(data.destinations) > 0
 	return data, nil
+}
+
+func getFromChatId(origin tdlib.MessageForwardOrigin) int64 {
+	switch origin := origin.(type) {
+	case *tdlib.MessageForwardOriginChat:
+		return origin.SenderChatID
+	case *tdlib.MessageForwardOriginChannel:
+		return origin.ChatID
+	}
+
+	return 0
 }
 
 func (h *handler) isMessageAfterJoin(chatId int64, messageDate time.Time) (bool, error) {
