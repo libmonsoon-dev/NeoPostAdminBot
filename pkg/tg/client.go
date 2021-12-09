@@ -17,7 +17,7 @@ type Client struct {
 	updates chan tdlib.UpdateMsg
 }
 
-func NewClient(conf Config) (*Client, error) {
+func NewClient(conf Config) (*Client, error) { // TODO: move to github.com/zelenin/go-tdlib/
 	config := tdlib.Config{
 		APIID:               "187786",
 		APIHash:             "e782045df67ba48e441ccb105da8fc85",
