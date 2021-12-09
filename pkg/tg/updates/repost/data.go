@@ -1,106 +1,84 @@
 package repost
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/Arman92/go-tdlib"
+
+	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/model"
 )
 
 const (
-	typeKey           = "@type"
-	canBeForwardedKey = "can_be_forwarded"
-	messageKey        = "message"
-	chatIDKey         = "chat_id"
-	forwardInfoKey    = "forward_info"
-	idKet             = "id"
-	dateKey           = "date"
+	typeKey = "@type"
 )
 
 type forwardData struct {
-	chatID    int64
-	messageID int64
+	shouldForward bool
+	messageId     int64
+	destinations  []model.RepostConfig
 }
 
-func (h *handler) getForwardData(input tdlib.UpdateData) (data forwardData, ok bool) {
-	canBeForwarded, ok := input[canBeForwardedKey].(bool)
-	if ok && !canBeForwarded {
-		h.log.Debugf("data.%s = %v", canBeForwardedKey, input[canBeForwardedKey])
+func (h *handler) getForwardData(input tdlib.UpdateMsg) (data forwardData, err error) {
+	var tmp tdlib.UpdateNewMessage
+	if err = json.Unmarshal(input.Raw, &tmp); err != nil {
+		return data, fmt.Errorf("unmarshal raw update: %w", err)
+	}
+
+	if tmp.Message == nil {
+		h.log.Debugf("message is nil")
 		return
 	}
 
-	message, ok := input[messageKey].(map[string]interface{})
-	if !ok {
-		h.log.Debugf("data.%s = %v", messageKey, input[messageKey])
+	message := *tmp.Message
+	data.messageId = message.ID
+
+	if !message.CanBeForwarded {
+		h.log.Debugf("message.can_be_forwarded = false")
 		return
 	}
 
-	chatIDFloat, ok := message[chatIDKey].(float64)
-	if !ok {
-		h.log.Debugf("data.message.%s = %v", chatIDKey, message[chatIDKey])
-		return
-	}
-	data.chatID = int64(chatIDFloat)
-
-	if _, forwarded := message[forwardInfoKey]; forwarded && !h.config.ReForward {
-		h.log.Debugf("data.message.%s = %v", forwardInfoKey, message[forwardInfoKey])
-		return
-	}
-
-	messageIDFloat, ok := message[idKet].(float64)
-	if !ok {
-		h.log.Debugf("data.message.%s = %v", idKet, message[idKet])
-		return
-	}
-	data.messageID = int64(messageIDFloat)
-
-	messageDate, ok := message[dateKey].(float64)
-	if !ok {
-		h.log.Debugf("data.message.%s = %v", dateKey, message[dateKey])
-		return
-	}
-
-	if ok = h.checkSources(data.chatID); !ok {
-		return
-	}
-
-	ok, err := h.isMessageAfterJoin(data.chatID, time.Unix(int64(messageDate), 0))
+	configs, err := h.configRepository.FindConfigBySourceId(message.ChatID)
 	if err != nil {
-		h.log.Errorf("isMessageAfterJoin: %s", err)
-		return
+		return data, fmt.Errorf("find configs by source id %d: %w", message.ChatID, err)
+	}
+
+	messageDate := time.Unix(int64(message.Date), 0)
+	ok, err := h.isMessageAfterJoin(message.ChatID, messageDate)
+	if err != nil {
+		return data, fmt.Errorf("check is message after join: %w", err)
 	}
 	if !ok {
-		h.log.Debugf("skipping messages before join to chat")
+		h.log.Debugf("messages created before join to chat", message.ID)
 		return
 	}
 
-	return data, true
-}
-
-func (h *handler) checkSources(chatID int64) bool {
-	for i := range h.config.Sources {
-		src, err := h.chatSearcher.SearchPublicChat(h.config.Sources[i])
-		if err != nil {
-			h.log.Errorf("check sources: search public chat: %v", err)
-			return false
+	for _, config := range configs {
+		if message.ForwardInfo != nil && !config.ReForward {
+			h.log.Debugf("forwarded message")
+			continue
 		}
 
-		if chatID == src.ID {
-			return true
+		if message.ForwardInfo != nil && message.ForwardInfo.FromChatID == config.DestinationId {
+			h.log.Debugf("forwarded from destination channel")
+			continue
 		}
+
+		data.destinations = append(data.destinations, config)
 	}
 
-	h.log.Debugf("message from chat %d is not in the source list", chatID)
-	return false
+	data.shouldForward = len(data.destinations) > 0
+	return data, nil
 }
 
-func (h *handler) isMessageAfterJoin(chatID int64, messageDate time.Time) (bool, error) {
+func (h *handler) isMessageAfterJoin(chatId int64, messageDate time.Time) (bool, error) {
 	botModel, err := h.tgClient.GetMe()
 	if err != nil {
 		return false, fmt.Errorf("get me: %w", err)
 	}
 
-	botChatMember, err := h.tgClient.GetChatMember(chatID, botModel.ID)
+	botChatMember, err := h.tgClient.GetChatMember(chatId, botModel.ID)
 	if err != nil {
 		return false, fmt.Errorf("get me as chat member: %w", err)
 	}

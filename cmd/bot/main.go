@@ -11,6 +11,8 @@ import (
 	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/bot"
 	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/cache"
 	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/logger/logrus"
+	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/repository/inmemory"
+	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/service"
 	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/tg"
 	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/tg/updates/repost"
 )
@@ -38,11 +40,15 @@ func main() {
 	check(err)
 	tgBot := bot.NewBot(loggerFactory, tgClient)
 
-	repostConfig := repost.Config{
-		Sources:     []string{"tmp_src", "karga4", "armeyskov"},
-		Destination: "tmp_dst",
+	repostConfigRepository := inmemory.NewRepostConfigRepository()
+	publicChatSearcher := cache.NewPublicChatSearcher(tgClient)
+	configService := service.NewRepostConfigService(repostConfigRepository, publicChatSearcher)
+	for _, source := range []string{"tmp_src", "karga4", "armeyskov"} {
+		err = configService.Add(source, "tmp_dst")
+		check(err)
 	}
-	repostHandler := repost.NewHandler(repostConfig, loggerFactory, tgClient, cache.NewPublicChatSearcher(tgClient))
+
+	repostHandler := repost.NewHandler(loggerFactory, tgClient, repostConfigRepository)
 	tgBot.AddUpdateHandlers(repostHandler)
 
 	ctx, stopNotify := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

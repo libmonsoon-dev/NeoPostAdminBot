@@ -1,8 +1,11 @@
-package repost
+package model
 
-type Config struct {
-	Sources     []string `json:"sources"`
-	Destination string   `json:"destination"`
+type RepostConfig struct {
+	Source      string `json:"sources"`
+	Destination string `json:"destination"`
+
+	SourceId      int64 `json:"source_id"`
+	DestinationId int64 `json:"destination_id"`
 
 	DisableNotification bool `json:"disable_notification"`
 	FromBackground      bool `json:"from_background"`

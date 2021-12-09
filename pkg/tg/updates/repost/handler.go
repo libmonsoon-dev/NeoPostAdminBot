@@ -6,11 +6,12 @@ import (
 	"github.com/Arman92/go-tdlib"
 
 	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/logger"
+	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/model"
 	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/tg/updates"
 )
 
 type MessageForwarder interface {
-	ForwardMessages(chatID int64, fromChatID int64, messageIDs []int64, options *tdlib.MessageSendOptions, sendCopy bool,
+	ForwardMessages(chatId, fromChatId int64, messageIds []int64, options *tdlib.MessageSendOptions, sendCopy bool,
 		removeCaption bool) (*tdlib.Messages, error)
 }
 
@@ -19,7 +20,7 @@ type MeGetter interface {
 }
 
 type ChatMemberGetter interface {
-	GetChatMember(chatID, userID int64) (*tdlib.ChatMember, error)
+	GetChatMember(chatId, userId int64) (*tdlib.ChatMember, error)
 }
 
 type TgClient interface {
@@ -32,19 +33,21 @@ type PublicChatSearcher interface {
 	SearchPublicChat(username string) (*tdlib.Chat, error)
 }
 
-type handler struct {
-	config       Config
-	log          logger.Logger
-	tgClient     TgClient
-	chatSearcher PublicChatSearcher
+type ConfigRepository interface {
+	FindConfigBySourceId(sourceId int64) ([]model.RepostConfig, error)
 }
 
-func NewHandler(config Config, loggerFactory logger.Factory, tgClient TgClient, chatSearcher PublicChatSearcher) updates.Handler {
+type handler struct {
+	log              logger.Logger
+	tgClient         TgClient
+	configRepository ConfigRepository
+}
+
+func NewHandler(loggerFactory logger.Factory, tgClient TgClient, configRepository ConfigRepository) updates.Handler {
 	return &handler{
-		config:       config,
-		log:          loggerFactory.New("repost handler"),
-		tgClient:     tgClient,
-		chatSearcher: chatSearcher,
+		log:              loggerFactory.New("repost handler"),
+		tgClient:         tgClient,
+		configRepository: configRepository,
 	}
 }
 
@@ -54,23 +57,32 @@ func (h *handler) Handle(update tdlib.UpdateMsg) (err error) {
 		return
 	}
 
-	data, ok := h.getForwardData(update.Data)
-	if !ok {
+	data, err := h.getForwardData(update)
+	if err != nil {
+		return fmt.Errorf("get forward data: %w", err)
+	}
+	if !data.shouldForward {
+		h.log.Debugf("skipping event %s", tdlib.UpdateNewMessageType)
 		return
 	}
 
-	dst, err := h.chatSearcher.SearchPublicChat(h.config.Destination)
-	if err != nil {
-		return fmt.Errorf("search public chat: %w", err)
+	for _, destination := range data.destinations {
+		if err := h.forwardMessage([]int64{data.messageId}, destination); err != nil {
+			h.log.Errorf("forward message from %s to %s: %v", destination.Source, destination.Destination, err)
+		}
 	}
 
+	return nil
+}
+
+func (h *handler) forwardMessage(messageIds []int64, c model.RepostConfig) (err error) {
 	options := &tdlib.MessageSendOptions{
-		DisableNotification: h.config.DisableNotification,
-		FromBackground:      h.config.FromBackground,
+		DisableNotification: c.DisableNotification,
+		FromBackground:      c.FromBackground,
 	}
 
-	if _, err := h.tgClient.ForwardMessages(dst.ID, data.chatID, []int64{data.messageID}, options,
-		h.config.SendCopy, h.config.RemoveCaption); err != nil {
+	_, err = h.tgClient.ForwardMessages(c.DestinationId, c.SourceId, messageIds, options, c.SendCopy, c.RemoveCaption)
+	if err != nil {
 		return fmt.Errorf("forward message: %w", err)
 	}
 
