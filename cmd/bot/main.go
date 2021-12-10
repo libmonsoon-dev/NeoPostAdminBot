@@ -4,7 +4,12 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
+
+	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/model"
+
+	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/tg/updates/command"
 
 	"github.com/joho/godotenv"
 
@@ -36,9 +41,7 @@ func main() {
 		DataPath: os.Getenv("DATA_PATH"),
 	}
 	tgClient, err := tg.NewClient(tgClientConf)
-
 	check(err)
-	tgBot := bot.NewBot(loggerFactory, tgClient)
 
 	repostConfigRepository := inmemory.NewRepostConfigRepository()
 	publicChatSearcher := cache.NewPublicChatSearcher(tgClient)
@@ -49,7 +52,20 @@ func main() {
 	}
 
 	repostHandler := repost.NewHandler(loggerFactory, tgClient, repostConfigRepository)
-	tgBot.AddUpdateHandlers(repostHandler)
+	userRepository := inmemory.NewUserRepository()
+
+	initialAdmin := model.User{
+		Username: os.Getenv("INITIAL_ADMIN_USERNAME"),
+		IsAdmin:  true,
+	}
+	initialAdmin.Id, err = strconv.ParseInt(os.Getenv("INITIAL_ADMIN_ID"), 10, 64)
+	check(err)
+
+	err = userRepository.Add(initialAdmin)
+	check(err)
+
+	commandHandler := command.NewHandler(loggerFactory, tgClient, repostConfigRepository, userRepository)
+	tgBot := bot.NewBot(loggerFactory, tgClient, repostHandler, commandHandler)
 
 	ctx, stopNotify := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stopNotify()

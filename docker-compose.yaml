@@ -8,3 +8,5 @@ services:
     environment:
       - DATA_PATH=/var/NeoPostAdminBot
       - TG_BOT_TOKEN=${TG_BOT_TOKEN}
+      - INITIAL_ADMIN_USERNAME=${INITIAL_ADMIN_USERNAME}
+      - INITIAL_ADMIN_ID=${INITIAL_ADMIN_ID}

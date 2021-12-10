@@ -1,7 +1,16 @@
 diff --git a/vendor/github.com/Arman92/go-tdlib/methods.go b/vendor/github.com/Arman92/go-tdlib/methods.go
-index 59ffe37..71dd70b 100644
+index 59ffe37..563e5ab 100644
 --- a/vendor/github.com/Arman92/go-tdlib/methods.go
 +++ b/vendor/github.com/Arman92/go-tdlib/methods.go
+@@ -693,7 +693,7 @@ func (client *Client) GetMe() (*User, error) {
+ 
+ // GetUser Returns information about a user by their identifier. This is an offline request if the current user is not a bot
+ // @param userID User identifier
+-func (client *Client) GetUser(userID int32) (*User, error) {
++func (client *Client) GetUser(userID int64) (*User, error) {
+ 	result, err := client.SendAndCatch(UpdateData{
+ 		"@type":   "getUser",
+ 		"user_id": userID,
 @@ -4495,11 +4495,15 @@ func (client *Client) TransferChatOwnership(chatID int64, userID int32, password
  // GetChatMember Returns information about a single member of a chat
  // @param chatID Chat identifier
@@ -20,7 +29,7 @@ index 59ffe37..71dd70b 100644
  
  	if err != nil {
 diff --git a/vendor/github.com/Arman92/go-tdlib/types.go b/vendor/github.com/Arman92/go-tdlib/types.go
-index a5264e6..58fde13 100644
+index a5264e6..cd2575f 100644
 --- a/vendor/github.com/Arman92/go-tdlib/types.go
 +++ b/vendor/github.com/Arman92/go-tdlib/types.go
 @@ -4328,7 +4328,7 @@ func (inputChatPhotoAnimation *InputChatPhotoAnimation) GetInputChatPhotoEnum()
@@ -50,3 +59,39 @@ index a5264e6..58fde13 100644
  		FirstName         string        `json:"first_name"`         // First name of the user
  		LastName          string        `json:"last_name"`          // Last name of the user
  		Username          string        `json:"username"`           // Username of the user
+@@ -4506,7 +4506,7 @@ func NewUserFullInfo(photo *ChatPhoto, isBlocked bool, canBeCalled bool, support
+ type Users struct {
+ 	tdCommon
+ 	TotalCount int32   `json:"total_count"` // Approximate total count of users found
+-	UserIDs    []int32 `json:"user_ids"`    // A list of user identifiers
++	UserIDs    []int64 `json:"user_ids"`    // A list of user identifiers
+ }
+ 
+ // MessageType return the string telegram-type of Users
+@@ -4518,7 +4518,7 @@ func (users *Users) MessageType() string {
+ //
+ // @param totalCount Approximate total count of users found
+ // @param userIDs A list of user identifiers
+-func NewUsers(totalCount int32, userIDs []int32) *Users {
++func NewUsers(totalCount int32, userIDs []int64) *Users {
+ 	usersTemp := Users{
+ 		tdCommon:   tdCommon{Type: "users"},
+ 		TotalCount: totalCount,
+@@ -6891,7 +6891,7 @@ func (draftMessage *DraftMessage) UnmarshalJSON(b []byte) error {
+ // ChatTypePrivate An ordinary chat with a user
+ type ChatTypePrivate struct {
+ 	tdCommon
+-	UserID int32 `json:"user_id"` // User identifier
++	UserID int64 `json:"user_id"` // User identifier
+ }
+ 
+ // MessageType return the string telegram-type of ChatTypePrivate
+@@ -6902,7 +6902,7 @@ func (chatTypePrivate *ChatTypePrivate) MessageType() string {
+ // NewChatTypePrivate creates a new ChatTypePrivate
+ //
+ // @param userID User identifier
+-func NewChatTypePrivate(userID int32) *ChatTypePrivate {
++func NewChatTypePrivate(userID int64) *ChatTypePrivate {
+ 	chatTypePrivateTemp := ChatTypePrivate{
+ 		tdCommon: tdCommon{Type: "chatTypePrivate"},
+ 		UserID:   userID,
