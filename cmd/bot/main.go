@@ -7,18 +7,16 @@ import (
 	"strconv"
 	"syscall"
 
-	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/model"
-
-	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/tg/updates/command"
-
 	"github.com/joho/godotenv"
 
 	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/bot"
 	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/cache"
 	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/logger/logrus"
+	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/model"
 	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/repository/inmemory"
 	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/service"
 	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/tg"
+	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/tg/updates/command"
 	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/tg/updates/repost"
 )
 
