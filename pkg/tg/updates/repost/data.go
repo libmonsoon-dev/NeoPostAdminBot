@@ -17,6 +17,7 @@ const (
 
 type forwardData struct {
 	shouldForward bool
+	sourceChatId  int64
 	messageId     int64
 	destinations  []model.RepostConfig
 }
@@ -33,6 +34,7 @@ func (h *handler) getForwardData(input tdlib.UpdateMsg) (data forwardData, err e
 	}
 
 	message := *tmp.Message
+	data.sourceChatId = message.ChatID
 	data.messageId = message.ID
 	h.logMessageLink(message)
 
@@ -41,44 +43,44 @@ func (h *handler) getForwardData(input tdlib.UpdateMsg) (data forwardData, err e
 		return
 	}
 
-	configs, err := h.configRepository.FindConfigBySourceId(message.ChatID)
+	configs, err := h.configRepository.FindConfigBySourceId(data.sourceChatId)
 	if err != nil {
-		return data, fmt.Errorf("find configs by source id %d: %w", message.ChatID, err)
+		return data, fmt.Errorf("find configs by source id %d: %w", data.sourceChatId, err)
 	}
 	if len(configs) == 0 {
-		h.log.Debugf("configs with sourceId = %d not found", message.ChatID)
+		h.log.Debugf("configs with sourceId = %d not found", data.sourceChatId)
 		return
 	}
 
 	messageDate := time.Unix(int64(message.Date), 0)
 	ok, err := h.isMessageAfterJoin(message.ChatID, messageDate)
 	if err != nil {
-		return data, fmt.Errorf("check is message after join: %w", err)
+		return data, fmt.Errorf("check is message from chat %d after join: %w", data.sourceChatId, err)
 	}
 	if !ok {
-		h.log.Debugf("messages created before join to chat", message.ID)
+		h.log.Debugf("messages created before join to chat (chatId %d messageId %d)", data.sourceChatId, message.ID)
 		return
 	}
 
 	for _, config := range configs {
 		if message.ForwardInfo != nil && !config.ReForward {
-			h.log.Debugf("forwarded message")
+			h.log.Debugf("message from chat %d is forwarded message", data.sourceChatId)
 			continue
 		}
 
 		if originChatId, ok := getFromChatId(message.ForwardInfo); ok {
 			if originChatId == config.DestinationId {
-				h.log.Debugf("forwarded from destination channel")
+				h.log.Debugf("message from chat %d: forwarded from destination channel", data.sourceChatId)
 				continue
 			}
 
 			fromAnotherSource, err := h.configRepository.Has(model.RepostConfig{SourceId: originChatId, DestinationId: config.DestinationId})
 			if err != nil {
-				h.log.Errorf("checking if the origin of the repost is another source: %v", err)
+				h.log.Errorf("message from chat %d: checking if the origin of the repost is another source: %v", data.sourceChatId, err)
 				continue
 			}
 			if fromAnotherSource {
-				h.log.Debugf("the origin of the repost is another source")
+				h.log.Debugf("message from chat %d: the origin of the repost is another source", data.sourceChatId)
 				continue
 			}
 		}
