@@ -40,7 +40,7 @@ func (b *Bot) MainLoop(ctx context.Context) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case update := <-b.tgClient.Updates():
-			b.runUpdateHandlers(update)
+			go b.runUpdateHandlers(update)
 		}
 	}
 }
