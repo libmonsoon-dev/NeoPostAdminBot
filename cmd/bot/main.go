@@ -46,7 +46,9 @@ func main() {
 	repostConfigRepository := inmemory.NewRepostConfigRepository()
 	publicChatSearcher := cache.NewPublicChatSearcher(tgClient)
 	configService := service.NewRepostConfigService(repostConfigRepository, publicChatSearcher)
-	for _, source := range []string{"tmp_src", "karga4", "armeyskov"} {
+
+	kargoChannels := []string{"armeyskov", "kargokult", "ikkinpi", "holarhia", "neoposta4", "neopostshit", "neopostart"}
+	for _, source := range append([]string{"tmp_src"}, kargoChannels...) {
 		err = configService.Add(source, "tmp_dst")
 		check(err)
 	}
