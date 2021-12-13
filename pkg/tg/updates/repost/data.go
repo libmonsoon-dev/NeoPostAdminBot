@@ -64,8 +64,19 @@ func (h *handler) getForwardData(input tdlib.UpdateMsg) (data forwardData, err e
 			continue
 		}
 
-		if message.ForwardInfo != nil && getFromChatId(message.ForwardInfo.Origin) == config.DestinationId {
+		originChatId := getFromChatId(message.ForwardInfo.Origin)
+		if message.ForwardInfo != nil && originChatId == config.DestinationId {
 			h.log.Debugf("forwarded from destination channel")
+			continue
+		}
+
+		fromAnotherSource, err := h.configRepository.Has(model.RepostConfig{SourceId: originChatId, DestinationId: config.DestinationId})
+		if err != nil {
+			h.log.Errorf("checking if the origin of the repost is another source: %v", err)
+			continue
+		}
+		if fromAnotherSource {
+			h.log.Debugf("the origin of the repost is another source")
 			continue
 		}
 

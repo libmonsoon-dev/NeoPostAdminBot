@@ -37,3 +37,18 @@ func (c *RepostConfigRepository) FindConfigBySourceId(sourceId int64) (result []
 
 	return
 }
+func (c *RepostConfigRepository) Has(m model.RepostConfig) (bool, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	for _, element := range c.data {
+		if (m.Source == "" || m.Source == element.Source) &&
+			(m.Destination == "" || m.Destination == element.Destination) &&
+			(m.SourceId == 0 || m.SourceId == element.SourceId) &&
+			(m.DestinationId == 0 || m.DestinationId == element.DestinationId) {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}

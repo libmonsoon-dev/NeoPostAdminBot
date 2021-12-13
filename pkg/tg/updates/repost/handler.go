@@ -35,6 +35,7 @@ type PublicChatSearcher interface {
 
 type ConfigRepository interface {
 	FindConfigBySourceId(sourceId int64) ([]model.RepostConfig, error)
+	Has(m model.RepostConfig) (bool, error)
 }
 
 type handler struct {
