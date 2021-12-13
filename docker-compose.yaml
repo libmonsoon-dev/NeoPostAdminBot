@@ -3,6 +3,7 @@ version: "3.3"
 services:
   bot:
     build: "./"
+    restart: always
     volumes:
       - /var/NeoPostAdminBot:/var/NeoPostAdminBot
     environment:
