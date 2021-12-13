@@ -98,6 +98,7 @@ func (h *handler) logMessageLink(message tdlib.Message) {
 	link, err := h.tgClient.GetMessageLink(message.ChatID, message.ID, false, false)
 	if err != nil {
 		h.log.Errorf("get message link: %v", err)
+		return
 	}
 
 	h.log.Debugf("got message: %s", link.Link)
