@@ -64,20 +64,21 @@ func (h *handler) getForwardData(input tdlib.UpdateMsg) (data forwardData, err e
 			continue
 		}
 
-		originChatId := getFromChatId(message.ForwardInfo.Origin)
-		if message.ForwardInfo != nil && originChatId == config.DestinationId {
-			h.log.Debugf("forwarded from destination channel")
-			continue
-		}
+		if originChatId, ok := getFromChatId(message.ForwardInfo); ok {
+			if originChatId == config.DestinationId {
+				h.log.Debugf("forwarded from destination channel")
+				continue
+			}
 
-		fromAnotherSource, err := h.configRepository.Has(model.RepostConfig{SourceId: originChatId, DestinationId: config.DestinationId})
-		if err != nil {
-			h.log.Errorf("checking if the origin of the repost is another source: %v", err)
-			continue
-		}
-		if fromAnotherSource {
-			h.log.Debugf("the origin of the repost is another source")
-			continue
+			fromAnotherSource, err := h.configRepository.Has(model.RepostConfig{SourceId: originChatId, DestinationId: config.DestinationId})
+			if err != nil {
+				h.log.Errorf("checking if the origin of the repost is another source: %v", err)
+				continue
+			}
+			if fromAnotherSource {
+				h.log.Debugf("the origin of the repost is another source")
+				continue
+			}
 		}
 
 		data.destinations = append(data.destinations, config)
@@ -87,15 +88,19 @@ func (h *handler) getForwardData(input tdlib.UpdateMsg) (data forwardData, err e
 	return data, nil
 }
 
-func getFromChatId(origin tdlib.MessageForwardOrigin) int64 {
-	switch origin := origin.(type) {
-	case *tdlib.MessageForwardOriginChat:
-		return origin.SenderChatID
-	case *tdlib.MessageForwardOriginChannel:
-		return origin.ChatID
+func getFromChatId(forwardInfo *tdlib.MessageForwardInfo) (id int64, ok bool) {
+	if forwardInfo == nil || forwardInfo.Origin == nil {
+		return
 	}
 
-	return 0
+	switch origin := forwardInfo.Origin.(type) {
+	case *tdlib.MessageForwardOriginChat:
+		return origin.SenderChatID, true
+	case *tdlib.MessageForwardOriginChannel:
+		return origin.ChatID, true
+	}
+
+	return
 }
 
 func (h *handler) isMessageAfterJoin(chatId int64, messageDate time.Time) (bool, error) {
