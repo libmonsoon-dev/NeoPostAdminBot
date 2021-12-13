@@ -16,7 +16,7 @@ func (f factory) New(componentName string) logger.Logger {
 
 func NewFactory() logger.Factory {
 	l := log.New()
-	l.SetLevel(log.TraceLevel)
+	l.SetLevel(log.DebugLevel)
 	l.SetFormatter(&log.TextFormatter{
 		DisableColors: true,
 		FullTimestamp: true,
