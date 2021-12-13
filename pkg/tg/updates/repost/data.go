@@ -7,6 +7,7 @@ import (
 
 	"github.com/Arman92/go-tdlib"
 
+	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/logger"
 	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/model"
 )
 
@@ -33,6 +34,7 @@ func (h *handler) getForwardData(input tdlib.UpdateMsg) (data forwardData, err e
 
 	message := *tmp.Message
 	data.messageId = message.ID
+	h.logMessageLink(message)
 
 	if !message.CanBeForwarded {
 		h.log.Debugf("message.can_be_forwarded = false")
@@ -86,6 +88,19 @@ func (h *handler) getForwardData(input tdlib.UpdateMsg) (data forwardData, err e
 
 	data.shouldForward = len(data.destinations) > 0
 	return data, nil
+}
+
+func (h *handler) logMessageLink(message tdlib.Message) {
+	if !logger.IsDebugEnabled(h.log) {
+		return
+	}
+
+	link, err := h.tgClient.GetMessageLink(message.ChatID, message.ID, false, false)
+	if err != nil {
+		h.log.Errorf("get message link: %v", err)
+	}
+
+	h.log.Debugf("got message: %s", link.Link)
 }
 
 func getFromChatId(forwardInfo *tdlib.MessageForwardInfo) (id int64, ok bool) {

@@ -1,8 +1,9 @@
 package logrus
 
 import (
-	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/logger"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/logger"
 )
 
 type factory struct {
@@ -10,12 +11,12 @@ type factory struct {
 }
 
 func (f factory) New(componentName string) logger.Logger {
-	return f.l.WithField("component", componentName)
+	return entity{f.l.WithField("component", componentName)}
 }
 
 func NewFactory() logger.Factory {
 	l := log.New()
-	l.SetLevel(log.DebugLevel)
+	l.SetLevel(log.TraceLevel)
 	l.SetFormatter(&log.TextFormatter{
 		DisableColors: true,
 		FullTimestamp: true,

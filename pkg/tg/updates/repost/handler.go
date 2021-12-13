@@ -23,10 +23,15 @@ type ChatMemberGetter interface {
 	GetChatMember(chatId, userId int64) (*tdlib.ChatMember, error)
 }
 
+type MessageLinkGetter interface {
+	GetMessageLink(chatID int64, messageID int64, forAlbum bool, forComment bool) (*tdlib.MessageLink, error)
+}
+
 type TgClient interface {
 	MeGetter
 	ChatMemberGetter
 	MessageForwarder
+	MessageLinkGetter
 }
 
 type PublicChatSearcher interface {
