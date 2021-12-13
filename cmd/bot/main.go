@@ -38,7 +38,7 @@ func main() {
 	tgClient, err := tg.NewClient(tgClientConf)
 	check(err)
 
-	repostConfigRepository := inmemory.NewRepostConfigRepository()
+	repostConfigRepository := inmemory.NewRepostConfigRepository(loggerFactory)
 	publicChatSearcher := cache.NewPublicChatSearcher(tgClient)
 	configService := service.NewRepostConfigService(repostConfigRepository, publicChatSearcher)
 

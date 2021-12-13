@@ -3,14 +3,19 @@ package inmemory
 import (
 	"sync"
 
+	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/logger"
+
 	"github.com/libmonsoon-dev/NeoPostAdminBot/pkg/model"
 )
 
-func NewRepostConfigRepository() *RepostConfigRepository {
-	return &RepostConfigRepository{}
+func NewRepostConfigRepository(loggerFactory logger.Factory) *RepostConfigRepository {
+	return &RepostConfigRepository{
+		log: loggerFactory.New("repost config repository"),
+	}
 }
 
 type RepostConfigRepository struct {
+	log  logger.Logger
 	mu   sync.Mutex
 	data []model.RepostConfig
 }
@@ -18,6 +23,8 @@ type RepostConfigRepository struct {
 func (c *RepostConfigRepository) Add(conf model.RepostConfig) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+
+	c.log.Infof("added %+v", conf)
 
 	c.data = append(c.data, conf)
 	return nil
