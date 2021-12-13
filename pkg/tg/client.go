@@ -50,7 +50,7 @@ func NewClient(conf Config) (*Client, error) { // TODO: move to github.com/zelen
 		}
 	}
 
-	return &Client{Client: client, updates: client.GetRawUpdatesChannel(0)}, nil
+	return &Client{Client: client, updates: client.GetRawUpdatesChannel(100)}, nil
 }
 
 func (c *Client) Updates() <-chan tdlib.UpdateMsg {
