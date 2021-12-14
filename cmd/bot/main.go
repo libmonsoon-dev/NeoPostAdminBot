@@ -47,16 +47,14 @@ func main() {
 
 	// TODO: move to db
 	// TODO: rename to repost rule
-	kargoChannels := []string{"armeyskov", "kargokult", "ikkinpi", "holarhia", "neoposta4", "neopostshit", "neopostart"}
+	kargoChannels := []string{"armeyskov", "kargokult", "ikkinpi", "holarhia"}
 	for _, source := range kargoChannels {
 		err = configService.Add(source, "tmp_dst")
 		check(err)
 
 		err = configService.Add(source, "karga4")
 		check(err)
-	}
 
-	for _, source := range []string{"armeyskov", "kargokult", "ikkinpi", "holarhia"} {
 		err = configService.Add(source, "neopostshit")
 		check(err)
 	}
