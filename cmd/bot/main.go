@@ -56,6 +56,11 @@ func main() {
 		check(err)
 	}
 
+	for _, source := range []string{"armeyskov", "kargokult", "ikkinpi", "holarhia"} {
+		err = configService.Add(source, "neopostshit")
+		check(err)
+	}
+
 	repostHandler := repost.NewHandler(loggerFactory, tgClient, repostConfigRepository)
 	//userRepository := inmemory.NewUserRepository()
 	//
